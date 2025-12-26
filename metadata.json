@@ -1,0 +1,5 @@
+{
+  "name": "Copy of ASCII QR Generator",
+  "description": "Generate copy-pasteable ASCII and Unicode QR codes for terminals, code comments, and text files.",
+  "requestFramePermissions": []
+}
