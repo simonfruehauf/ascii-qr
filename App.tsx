@@ -6,14 +6,13 @@ import { DEFAULT_QR_TEXT } from './constants';
 import { generateQRMatrix, renderMatrixToString } from './utils/qrGenerator';
 import { QrCode, Github } from 'lucide-react';
 
-// Get initial text from URL path (e.g., /ascii-qr/TESTSTRING.COM → "TESTSTRING.COM")
+// Get initial text from URL query param (e.g., ?text=TESTSTRING.COM)
 const getInitialTextFromURL = (): string => {
-  const basePath = '/ascii-qr/';
-  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  const text = params.get('text');
 
-  if (path.startsWith(basePath) && path.length > basePath.length) {
-    // Decode URI component to handle encoded characters
-    return decodeURIComponent(path.slice(basePath.length));
+  if (text) {
+    return decodeURIComponent(text);
   }
   return DEFAULT_QR_TEXT;
 };
