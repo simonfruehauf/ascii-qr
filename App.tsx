@@ -46,7 +46,7 @@ const App: React.FC = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+            <a href="https://github.com/simonfruehauf/ascii-qr" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
               <Github size={20} />
             </a>
           </div>
