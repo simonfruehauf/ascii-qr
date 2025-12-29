@@ -1,29 +1,49 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Controls } from './components/Controls';
 import { Display } from './components/Display';
-import { QROptions, ErrorCorrectionLevel } from './types';
+import { QROptions, ErrorCorrectionLevel, QRVariant } from './types';
 import { DEFAULT_QR_TEXT } from './constants';
 import { generateQRMatrix, renderMatrixToString } from './utils/qrGenerator';
 import { QrCode, Github } from 'lucide-react';
 
-// Get initial text from URL query param (e.g., ?text=TESTSTRING.COM)
-const getInitialTextFromURL = (): string => {
+// Parse initial options from URL query params (e.g., ?text=TESTSTRING.COM&ecc=H&invert=1)
+const getInitialOptionsFromURL = (): QROptions => {
   const params = new URLSearchParams(window.location.search);
-  const text = params.get('text');
 
-  if (text) {
-    return decodeURIComponent(text);
-  }
-  return DEFAULT_QR_TEXT;
+  const text = params.get('text');
+  const ecc = params.get('ecc') as ErrorCorrectionLevel | null;
+  const invert = params.get('invert');
+  const variant = params.get('variant') as QRVariant | null;
+
+  return {
+    text: text ? decodeURIComponent(text) : DEFAULT_QR_TEXT,
+    ecc: ecc && Object.values(ErrorCorrectionLevel).includes(ecc) ? ecc : ErrorCorrectionLevel.L,
+    invert: invert === '1' || invert === 'true',
+    variant: variant === 'default' ? 'default' : 'compact',
+  };
 };
 
 const App: React.FC = () => {
-  const [options, setOptions] = useState<QROptions>({
-    text: getInitialTextFromURL(),
-    ecc: ErrorCorrectionLevel.L,
-    invert: false,
-    variant: 'compact',
-  });
+  const [options, setOptions] = useState<QROptions>(getInitialOptionsFromURL);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Global keyboard shortcut: Ctrl+Enter to focus textarea
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        // Find and focus the textarea
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+          textarea.focus();
+          textarea.select();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const asciiOutput = useMemo(() => {
     if (!options.text) return '';

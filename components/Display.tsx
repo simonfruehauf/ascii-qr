@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Copy, Check, Terminal, AlertCircle, Minus, Plus } from 'lucide-react';
 
 interface DisplayProps {
@@ -8,12 +8,13 @@ interface DisplayProps {
 export const Display: React.FC<DisplayProps> = ({ ascii }) => {
   const [copied, setCopied] = useState(false);
   const [fontSize, setFontSize] = useState(11);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCopied(false);
   }, [ascii]);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(ascii);
       setCopied(true);
@@ -21,7 +22,48 @@ export const Display: React.FC<DisplayProps> = ({ ascii }) => {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
-  };
+  }, [ascii]);
+
+  // Keyboard shortcut: Ctrl+C when focused on container
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selection = window.getSelection();
+        // Only intercept if no text is selected (let normal copy work if text selected)
+        if (!selection || selection.toString().length === 0) {
+          if (containerRef.current?.contains(document.activeElement) ||
+            containerRef.current === document.activeElement) {
+            e.preventDefault();
+            handleCopy();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleCopy]);
+
+  // Memoize the rendered grid to avoid re-rendering on each frame
+  const renderedGrid = useMemo(() => {
+    if (!ascii) return null;
+    return ascii.split('\n').map((line, lineIndex) => (
+      <div key={lineIndex} style={{ display: 'flex' }}>
+        {[...line].map((char, charIndex) => (
+          <span
+            key={charIndex}
+            style={{
+              display: 'inline-block',
+              width: '1ch',
+              textAlign: 'center'
+            }}
+          >
+            {char}
+          </span>
+        ))}
+      </div>
+    ));
+  }, [ascii]);
 
   if (!ascii) {
     return (
@@ -34,7 +76,12 @@ export const Display: React.FC<DisplayProps> = ({ ascii }) => {
   }
 
   return (
-    <div className="relative flex flex-col h-full min-h-[500px] bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl transition-all duration-300 group">
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      className="relative flex flex-col h-full min-h-[500px] bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-blue-500"
+      title="Press Ctrl+C to copy"
+    >
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 gap-3 sm:gap-0">
         <div className="flex items-center gap-2 text-slate-400">
@@ -77,22 +124,7 @@ export const Display: React.FC<DisplayProps> = ({ ascii }) => {
             fontSize: `${fontSize}px`
           }}
         >
-          {ascii.split('\n').map((line, lineIndex) => (
-            <div key={lineIndex} style={{ display: 'flex' }}>
-              {[...line].map((char, charIndex) => (
-                <span
-                  key={charIndex}
-                  style={{
-                    display: 'inline-block',
-                    width: '1ch',
-                    textAlign: 'center'
-                  }}
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-          ))}
+          {renderedGrid}
         </pre>
       </div>
 
