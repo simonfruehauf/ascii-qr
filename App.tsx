@@ -61,7 +61,7 @@ const App: React.FC = () => {
               <QrCode className="text-white w-6 h-6" />
             </div>
             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-              ASCII QR
+              ASCII QR GENERATOR
             </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
